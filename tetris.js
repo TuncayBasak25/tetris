@@ -5,14 +5,54 @@ let gameContainer = document.createElement('div');
 gameContainer.style.position = "absolute";
 gameContainer.style.overflow = "hidden";
 gameContainer.style.width = "300px";
-gameContainer.style.height = "600px";
+gameContainer.style.height = "650px";
 
 gameContainer.style.marginLeft = String((window.innerWidth - 300)/2) + "px";
-gameContainer.style.marginTop = "50px";
+gameContainer.style.marginTop = "10px";
 
 gameContainer.style.backgroundColor = "grey";
 
 document.body.appendChild(gameContainer);
+
+let scoreDiv = document.createElement('div');
+
+scoreDiv.style.position = "absolute";
+scoreDiv.style.width = "300px";
+scoreDiv.style.height = "50px";
+
+scoreDiv.style.top = "600px";
+
+scoreDiv.style.backgroundColor = "blue";
+
+scoreDiv.style.textAlign = "center";
+scoreDiv.style.fontSize = "25px";
+
+scoreDiv.score = 0;
+scoreDiv.level = 1;
+scoreDiv.line = 0;
+scoreDiv.gameOver = false;
+
+scoreDiv.appendChild(document.createTextNode('Score: '));
+scoreDiv.appendChild(document.createTextNode(scoreDiv.score));
+scoreDiv.appendChild(document.createTextNode('Level: '));
+scoreDiv.appendChild(document.createTextNode(scoreDiv.level));
+
+scoreDiv.update = function ()
+{
+  if (this.gameOver === true) return false;
+
+  this.level = Math.floor(this.line / 10);
+
+  this.firstChild.nextSibling.nodeValue = this.score;
+  this.lastChild.nodeValue = this.level;
+}
+scoreDiv.setGameOver = function ()
+{
+  this.innerHTML = "GAME OVER";
+  this.gameOver = true;
+}
+
+gameContainer.appendChild(scoreDiv);
 
 let gridTable = [];
 
@@ -33,6 +73,11 @@ for (let x=0; x < 10; x++)
 
     gridDiv.style.left = String(x * 30) + "px";
     gridDiv.style.top = String(y * 30) + "px";
+
+    if (x < 3 && y < 16) gridDiv.setAttribute('onclick', 'block.goLeft()');
+    else if (x > 6 && y < 16) gridDiv.setAttribute('onclick', 'block.goRight()');
+    else if (y > 15) gridDiv.setAttribute('onclick', 'block.goDown()');
+    else if (x > 2 && x < 7 && y < 16) gridDiv.setAttribute('onclick', 'block.rotate()');
 
     gameContainer.appendChild(gridDiv);
 
@@ -73,7 +118,9 @@ function Block()
     this.rotation = Math.floor(Math.random() * 4);
 
     this.blockList.forEach( block => {
-      block.style.backgroundColor = "#" + ((1<<24) * Math.random() | 0).toString(16);
+      let color_list = ['red', 'blue', 'yellow', 'green', 'purple', 'pink'];
+
+      block.style.backgroundColor = color_list[Math.floor(Math.random() * color_list.length)];
       block.style.position = "absolute";
 
       block.style.width = "30px";
@@ -146,8 +193,8 @@ function Block()
         this.blockList[2].update(1, 1);
         this.blockList[3].update(2, 1);
 
-        this.xReach = 1;
-        this.yReach = 2;
+        this.xReach = 2;
+        this.yReach = 1;
       }
       else if (this.rotation === 1)
       {
@@ -156,8 +203,8 @@ function Block()
         this.blockList[2].update(1, 1);
         this.blockList[3].update(0, 2);
 
-        this.xReach = 2;
-        this.yReach = 1;
+        this.xReach = 1;
+        this.yReach = 2;
       }
       else if (this.rotation === 2)
       {
@@ -166,8 +213,8 @@ function Block()
         this.blockList[2].update(2, 0);
         this.blockList[3].update(1, 1);
 
-        this.xReach = 1;
-        this.yReach = 2;
+        this.xReach = 2;
+        this.yReach = 1;
       }
       else if (this.rotation === 3)
       {
@@ -176,12 +223,12 @@ function Block()
         this.blockList[2].update(1, 2);
         this.blockList[3].update(0, 1);
 
-        this.xReach = 2;
-        this.yReach = 1;
+        this.xReach = 1;
+        this.yReach = 2;
       }
     }
     else if (this.type === 3) // L1
-    {console.log('test');
+    {
       if (this.rotation === 0)
       {
         this.blockList[0].update(0, 0);
@@ -248,9 +295,9 @@ function Block()
       else if (this.rotation === 2)
       {
         this.blockList[0].update(0, 0);
-        this.blockList[1].update(1, 0);
-        this.blockList[2].update(1, 1);
-        this.blockList[3].update(1, 2);
+        this.blockList[1].update(0, 1);
+        this.blockList[2].update(0, 2);
+        this.blockList[3].update(1, 0);
 
         this.xReach = 1;
         this.yReach = 2;
@@ -316,24 +363,121 @@ function Block()
 
   this.canGoDown = function ()
   {
-    if (block.y === 19) return false;
+    if (block.y > 18 - block.yReach) return false;
 
-    this.blockList.forEach( b => {
+    for (let b of this.blockList)
+    {
       if (gridTable[b.x][b.y+1].isEmpty() === false)
-      {console.log('test');
+      {
         return false;
       }
-    });
-
+    }
     return true;
+  }
+
+  this.goDown = function ()
+  {
+    if (block.canGoDown() === true)
+    {
+      block.y++;
+      block.updateBlock();
+    }
+    else
+    {
+      block.dropBlock();
+      block.generateBlock();
+    }
+  }
+
+  this.canGoLeft = function ()
+  {
+
+    for (let block of this.blockList)
+    if (block.x < 1) return false;
+
+    for (let b of this.blockList)
+    {
+      if (gridTable[b.x-1][b.y].isEmpty() === false)
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  this.rotate = function ()
+  {
+    if (block.x < 9 - block.lastXReach && block.y < 19 - block.lastYReach)
+    {
+      block.rotation++;
+      if (block.rotation > 3) block.rotation = 0;
+      block.updateBlock();
+    }
+  }
+
+  this.canGoRight = function ()
+  {
+    if (block.x > 8 - block.xReach) return false;
+
+    for (let b of this.blockList)
+    {
+      if (gridTable[b.x+1][b.y].isEmpty() === false)
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  this.goLeft = function ()
+  {
+    block.x--;
+    block.updateBlock();
+  }
+
+  this.goRight = function ()
+  {
+    block.x++;
+    block.updateBlock();
   }
 
   this.dropBlock = function ()
   {
+    if (this.y === 0)
+    {
+      scoreDiv.setGameOver();
+    }
     this.blockList.forEach( b => {
       gridTable[b.x][b.y].style.backgroundColor = b.style.backgroundColor;
       gridTable[b.x][b.y].empty = false;
     });
+
+    scoreDiv.score += scoreDiv.level * 10;
+    scoreDiv.update();
+
+    for (let block of this.blockList)
+    {
+      let lineIncomplet = false;
+      for (let column of gridTable)
+      {
+        lineIncomplet = lineIncomplet || column[block.y].isEmpty();
+      }
+
+      if (lineIncomplet === false)
+      {
+        scoreDiv.score += scoreDiv.level * 10 * (19 - block.y);
+        scoreDiv.line++;
+        scoreDiv.update();
+        for (let column of gridTable)
+        {
+          for (let y = block.y; y > 0; y--)
+          {
+            column[y].style.backgroundColor = column[y-1].style.backgroundColor;
+            column[y].empty = column[y-1].isEmpty();
+          }
+        }
+      }
+    }
 
   }
 
@@ -361,67 +505,49 @@ let block = new Block();
 window.addEventListener('keydown', keydown);
 
 function keydown()
-{console.log(event.which);
+{
+  if (scoreDiv.gameOver === true) return false;
+
   if (event.which === 37)
   {
-    if (block.x > 0)
+    if (block.canGoLeft() === true)
     {
-      block.x--;
-      block.updateBlock();
+      block.goLeft();
     }
   }
   else if (event.which === 39)
   {
-    if (block.x < 9 - block.xReach)
+    if (block.canGoRight() === true)
     {
-      block.x++;
-      block.updateBlock();
+      block.goRight();
     }
   }
   else if (event.which === 38)
   {
-    if (block.x < 10 - block.lastXReach && block.y < 20 - block.lastYReach)
-    {
-      block.rotation++;
-      if (block.rotation > 3) block.rotation = 0;
-      block.updateBlock();
-    }
+    block.rotate();
   }
   else if (event.which === 40)
   {
-    if (block.y < 19 - block.yReach && block.canGoDown() === true)
-    {
-      block.y++;
-      block.updateBlock();
-    }
-    else
-    {
-      block.dropBlock();
-      block.generateBlock();
-    }
+    block.goDown();
   }
   else if (event.which === 32)
   {
-    if (block.x < 10 - block.lastXReach && block.y < 20 - block.lastYReach)
-    {
-      block.rotation++;
-      if (block.rotation > 3) block.rotation = 0;
-      block.updateBlock();
-    }
+    block.rotate();
   }
-  updateTable();
 }
 
-function updateTable()
+let frame = 0;
+function gameLoop()
 {
-  gridTable.forEach( table => {
-    table.forEach( b => {
-      if (b.isEmpty() === false)
-      {
-        b.style.backgroundColor = "black";
-      }
-    });
+  if (frame === (60 - scoreDiv.level))
+  {
+    frame = 0;
 
-  });
+    block.goDown();
+  }
 
+  frame++;
+  if (scoreDiv.gameOver === false) window.requestAnimationFrame(gameLoop);
 }
+
+gameLoop();
