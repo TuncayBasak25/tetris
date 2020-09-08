@@ -1,14 +1,14 @@
-
+let gridSize = Math.floor((window.innerHeight - 80)/20);
 
 let gameContainer = document.createElement('div');
 
 gameContainer.style.position = "absolute";
 gameContainer.style.overflow = "hidden";
-gameContainer.style.width = "300px";
-gameContainer.style.height = "650px";
+gameContainer.style.width = String(gridSize * 10) + "px";
+gameContainer.style.height = String(gridSize * 20 + 50) + "px";
 
-gameContainer.style.marginLeft = String((window.innerWidth - 300)/2) + "px";
-gameContainer.style.marginTop = "10px";
+gameContainer.style.marginLeft = String((window.innerWidth - (gridSize * 10))/2) + "px";
+gameContainer.style.marginTop = "3px"
 
 gameContainer.style.backgroundColor = "grey";
 
@@ -17,15 +17,15 @@ document.body.appendChild(gameContainer);
 let scoreDiv = document.createElement('div');
 
 scoreDiv.style.position = "absolute";
-scoreDiv.style.width = "300px";
+scoreDiv.style.width = String(gridSize * 10) + "px";
 scoreDiv.style.height = "50px";
 
-scoreDiv.style.top = "600px";
+scoreDiv.style.top = String(gridSize * 20) + "px";
 
 scoreDiv.style.backgroundColor = "blue";
 
 scoreDiv.style.textAlign = "center";
-scoreDiv.style.fontSize = "25px";
+scoreDiv.style.fontSize = "20px";
 
 scoreDiv.score = 0;
 scoreDiv.level = 1;
@@ -34,6 +34,7 @@ scoreDiv.gameOver = false;
 
 scoreDiv.appendChild(document.createTextNode('Score: '));
 scoreDiv.appendChild(document.createTextNode(scoreDiv.score));
+scoreDiv.appendChild(document.createElement("br"));
 scoreDiv.appendChild(document.createTextNode('Level: '));
 scoreDiv.appendChild(document.createTextNode(scoreDiv.level));
 
@@ -41,14 +42,14 @@ scoreDiv.update = function ()
 {
   if (this.gameOver === true) return false;
 
-  this.level = Math.floor(this.line / 10);
+  this.level = Math.floor(this.line / 10) + 1;
 
   this.firstChild.nextSibling.nodeValue = this.score;
   this.lastChild.nodeValue = this.level;
 }
 scoreDiv.setGameOver = function ()
 {
-  this.innerHTML = "GAME OVER";
+  this.innerHTML = `GAME OVER <br> Level: ${this.level} | Score: ${this.score}`;
   this.gameOver = true;
 }
 
@@ -68,11 +69,11 @@ for (let x=0; x < 10; x++)
 
     gridDiv.style.position = "absolute";
 
-    gridDiv.style.width = "30px";
-    gridDiv.style.height = "30px";
+    gridDiv.style.width = gridSize + "px";
+    gridDiv.style.height = gridSize + "px";
 
-    gridDiv.style.left = String(x * 30) + "px";
-    gridDiv.style.top = String(y * 30) + "px";
+    gridDiv.style.left = String(x * gridSize) + "px";
+    gridDiv.style.top = String(y * gridSize) + "px";
 
     if (x < 3 && y < 16) gridDiv.setAttribute('onclick', 'block.goLeft()');
     else if (x > 6 && y < 16) gridDiv.setAttribute('onclick', 'block.goRight()');
@@ -123,8 +124,8 @@ function Block()
       block.style.backgroundColor = color_list[Math.floor(Math.random() * color_list.length)];
       block.style.position = "absolute";
 
-      block.style.width = "30px";
-      block.style.height = "30px";
+      block.style.width = gridSize + "px";
+      block.style.height = gridSize + "px";
 
       block.style.outline = "1px solid grey";
       block.style.outlineOffset = "-1px";
@@ -135,8 +136,8 @@ function Block()
 
       block.update = function (offsetX, offsetY)
       {
-        this.style.left = String((this.that.x + offsetX) * 30) + "px";
-        this.style.top  = String((this.that.y + offsetY) * 30) + "px";
+        this.style.left = String((this.that.x + offsetX) * gridSize) + "px";
+        this.style.top  = String((this.that.y + offsetY) * gridSize) + "px";
 
         this.x = this.that.x + offsetX;
         this.y = this.that.y + offsetY;
