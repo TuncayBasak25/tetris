@@ -432,14 +432,20 @@ function Block()
 
   this.goLeft = function ()
   {
-    block.x--;
-    block.updateBlock();
+    if (this.canGoLeft() === true)
+    {
+      block.x--;
+      block.updateBlock();
+    }
   }
 
   this.goRight = function ()
   {
-    block.x++;
-    block.updateBlock();
+    if (this.canGoRight() === true)
+    {
+      block.x++;
+      block.updateBlock();
+    }
   }
 
   this.dropBlock = function ()
@@ -511,17 +517,11 @@ function keydown()
 
   if (event.which === 37)
   {
-    if (block.canGoLeft() === true)
-    {
-      block.goLeft();
-    }
+    block.goLeft();
   }
   else if (event.which === 39)
   {
-    if (block.canGoRight() === true)
-    {
-      block.goRight();
-    }
+    block.goRight();
   }
   else if (event.which === 38)
   {
@@ -548,7 +548,7 @@ function gameLoop()
   }
 
   frame++;
-  if (scoreDiv.gameOver === false) window.requestAnimationFrame(gameLoop);
+  if (scoreDiv.gameOver === false) setTimeout(gameLoop, 1000/60);
 }
 
 gameLoop();
